@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+html<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -8,6 +8,9 @@
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { margin: 0; padding: 0; }
+    </style>
 </head>
 <body>
     <div id="root"></div>
@@ -65,3 +68,256 @@
               {
                 tip: "Model gratitude throughout the day. When children hear you express thankfulness for simple things, they learn to notice blessings too.",
                 activity: "Before bed, share three things you're each grateful for today. Make it a conversation, not a quiz. Share yours first to model it."
+              },
+              {
+                tip: "Answer spiritual questions simply and honestly. It's okay to say 'That's a great question. Let me think about that.' Children appreciate authenticity.",
+                activity: "If your child asks a question about faith today, listen fully before answering. Ask them what they think first - their insights might surprise you."
+              },
+              {
+                tip: "Sabbath rest isn't just about what we don't do—it's about being present with the ones we love. Even 15 minutes of unhurried time teaches children that people matter more than tasks, and rest is sacred.",
+                activity: "This week, create a 'rest moment' with your child. No screens, no rush. Just sitting together, maybe in nature, talking about what made you smile this week. Let them feel the peace of simply being."
+              }
+            ],
+            Learning: [
+              {
+                tip: "Turn everyday moments into learning opportunities. Sorting laundry teaches colors, setting the table teaches counting, cooking teaches measurements.",
+                activity: "While preparing a meal, let your child help with one simple task. Count the ingredients together, talk about colors and textures, and celebrate their help."
+              },
+              {
+                tip: "Follow your child's interests. If they love trucks, read books about trucks, count trucks, draw trucks. Learning accelerates when curiosity leads.",
+                activity: "Notice what your child is fascinated by today. Spend 15 minutes exploring that interest together - through play, questions, or a simple activity."
+              }
+            ]
+          };
+
+          const getCurrentWeek = () => {
+            const startDate = new Date('2025-01-06');
+            const today = new Date();
+            const diffTime = Math.abs(today - startDate);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            const weekNumber = Math.floor(diffDays / 7);
+            return weekNumber % themes.length;
+          };
+
+          const getCurrentDayOfWeek = () => {
+            const today = new Date();
+            return today.getDay();
+          };
+
+          const getTotalDaysSinceStart = () => {
+            const startDate = new Date('2025-01-06');
+            const today = new Date();
+            const diffTime = Math.abs(today - startDate);
+            return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+          };
+
+          const [currentTheme, setCurrentTheme] = useState(themes[getCurrentWeek()]);
+          const [currentTipIndex, setCurrentTipIndex] = useState(getCurrentDayOfWeek() % tipsData[themes[getCurrentWeek()]].length);
+          const [favorites, setFavorites] = useState([]);
+          const [completedActivities, setCompletedActivities] = useState([]);
+          const [activeTab, setActiveTab] = useState('home');
+          const [dayNumber, setDayNumber] = useState(getTotalDaysSinceStart());
+
+          const currentTip = tipsData[currentTheme][currentTipIndex];
+          const isFavorite = favorites.some(
+            fav => fav.theme === currentTheme && fav.tipIndex === currentTipIndex
+          );
+          const isCompleted = completedActivities.some(
+            comp => comp.theme === currentTheme && comp.tipIndex === currentTipIndex && comp.day === dayNumber
+          );
+
+          const toggleFavorite = () => {
+            if (isFavorite) {
+              setFavorites(favorites.filter(
+                fav => !(fav.theme === currentTheme && fav.tipIndex === currentTipIndex)
+              ));
+            } else {
+              setFavorites([...favorites, {
+                theme: currentTheme,
+                tipIndex: currentTipIndex,
+                tip: currentTip.tip,
+                activity: currentTip.activity
+              }]);
+            }
+          };
+
+          const toggleCompleted = () => {
+            if (isCompleted) {
+              setCompletedActivities(completedActivities.filter(
+                comp => !(comp.theme === currentTheme && comp.tipIndex === currentTipIndex && comp.day === dayNumber)
+              ));
+            } else {
+              setCompletedActivities([...completedActivities, {
+                theme: currentTheme,
+                tipIndex: currentTipIndex,
+                day: dayNumber
+              }]);
+            }
+          };
+
+          const getThemeColor = (theme) => {
+            const colors = {
+              Speech: 'bg-blue-500',
+              Behavior: 'bg-green-500',
+              Bonding: 'bg-pink-500',
+              Faith: 'bg-purple-500',
+              Learning: 'bg-orange-500'
+            };
+            return colors[theme];
+          };
+
+          const getStreakCount = () => {
+            const uniqueDays = [...new Set(completedActivities.map(c => c.day))];
+            return uniqueDays.length;
+          };
+
+          return (
+            <div className="min-h-screen bg-gradient-to-b from-blue-50 to-purple-50">
+              <div className="bg-white shadow-sm">
+                <div className="max-w-2xl mx-auto px-4 py-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h1 className="text-3xl font-bold text-gray-800">Brightsteps</h1>
+                      <p className="text-sm text-gray-600 mt-1">Small steps that lead to growth</p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-blue-600">Day {dayNumber}</div>
+                      <div className="text-xs text-gray-600">{getStreakCount()} activities completed</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="max-w-2xl mx-auto px-4 py-6 pb-24">
+                {activeTab === 'home' && (
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                      <div className={`${getThemeColor(currentTheme)} text-white px-4 py-2 rounded-full text-sm font-semibold`}>
+                        This Week: {currentTheme}
+                      </div>
+                      <button
+                        onClick={toggleFavorite}
+                        className={`p-2 rounded-full ${isFavorite ? 'text-red-500' : 'text-gray-400'} transition-colors text-2xl`}
+                      >
+                        ❤️
+                      </button>
+                    </div>
+
+                    <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl p-4 border-l-4 border-orange-400">
+                      <p className="text-sm text-gray-700 italic">
+                        "You're doing a wonderful job. Every small step matters. Grace for yourself, love for your child." 💛
+                      </p>
+                    </div>
+
+                    <div className="bg-white rounded-2xl shadow-lg p-6">
+                      <div className="flex items-center mb-4">
+                        <span className="text-2xl mr-2">📖</span>
+                        <h2 className="text-xl font-bold text-gray-800">Today's Tip</h2>
+                      </div>
+                      <p className="text-gray-700 leading-relaxed mb-2">{currentTip.tip}</p>
+                      <p className="text-xs text-gray-500 mt-4">📖 Reading time: 1-2 minutes</p>
+                    </div>
+
+                    <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-2xl shadow-lg p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center">
+                          <span className="text-2xl mr-2">⭐</span>
+                          <h2 className="text-xl font-bold text-gray-800">Try This Today</h2>
+                        </div>
+                        <button
+                          onClick={toggleCompleted}
+                          className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                            isCompleted 
+                              ? 'bg-green-500 text-white' 
+                              : 'bg-white text-gray-600 border border-gray-300'
+                          }`}
+                        >
+                          {isCompleted ? '✅ Done!' : '⭕ Mark done'}
+                        </button>
+                      </div>
+                      <p className="text-gray-700 leading-relaxed">{currentTip.activity}</p>
+                      <p className="text-xs text-gray-500 mt-4">⏱️ Time needed: 5-15 minutes</p>
+                    </div>
+
+                    <div className="bg-white rounded-2xl shadow-lg p-6">
+                      <h3 className="text-lg font-bold text-gray-800 mb-4">Your 5-Week Journey</h3>
+                      <p className="text-sm text-gray-600 mb-4">Each week focuses on a different area of growth</p>
+                      <div className="space-y-2">
+                        {themes.map((theme) => {
+                          const isCurrentWeek = theme === currentTheme;
+                          return (
+                            <div
+                              key={theme}
+                              className={`flex items-center justify-between p-3 rounded-lg transition-all ${
+                                isCurrentWeek ? 'bg-blue-100 border-2 border-blue-300' : 'bg-gray-50'
+                              }`}
+                            >
+                              <span className={`font-medium ${isCurrentWeek ? 'text-blue-800' : 'text-gray-700'}`}>
+                                {theme}
+                              </span>
+                              {isCurrentWeek && (
+                                <span className="text-xs bg-blue-500 text-white px-2 py-1 rounded-full">
+                                  Current Week
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'favorites' && (
+                  <div className="space-y-4">
+                    <h2 className="text-2xl font-bold text-gray-800 mb-4">Your Favorites</h2>
+                    {favorites.length === 0 ? (
+                      <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
+                        <p className="text-6xl mb-4">❤️</p>
+                        <p className="text-gray-600 mb-2">No favorites yet!</p>
+                        <p className="text-sm text-gray-500">Tap the heart icon on tips you love to save them here.</p>
+                      </div>
+                    ) : (
+                      favorites.map((fav, index) => (
+                        <div key={index} className="bg-white rounded-2xl shadow-lg p-6">
+                          <div className={`${getThemeColor(fav.theme)} text-white px-3 py-1 rounded-full text-xs font-semibold inline-block mb-3`}>
+                            {fav.theme}
+                          </div>
+                          <p className="text-gray-700 mb-4 leading-relaxed">{fav.tip}</p>
+                          <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-4">
+                            <p className="text-sm text-gray-600 font-semibold mb-2">⭐ Activity:</p>
+                            <p className="text-gray-700 text-sm leading-relaxed">{fav.activity}</p>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
+                <div className="max-w-2xl mx-auto flex justify-around py-4">
+                  <button
+                    onClick={() => setActiveTab('home')}
+                    className={`flex flex-col items-center transition-colors ${activeTab === 'home' ? 'text-blue-500' : 'text-gray-400'}`}
+                  >
+                    <span className="text-2xl">🏠</span>
+                    <span className="text-xs mt-1">Home</span>
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('favorites')}
+                    className={`flex flex-col items-center transition-colors ${activeTab === 'favorites' ? 'text-blue-500' : 'text-gray-400'}`}
+                  >
+                    <span className="text-2xl">❤️</span>
+                    <span className="text-xs mt-1">Favorites {favorites.length > 0 ? `(${favorites.length})` : ''}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        ReactDOM.render(<BrightstepsApp />, document.getElementById('root'));
+    </script>
+</body>
+</html>
